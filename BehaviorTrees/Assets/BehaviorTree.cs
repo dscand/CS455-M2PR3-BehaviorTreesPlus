@@ -6,10 +6,13 @@ public class BehaviorTree
 {
 	public class Task
 	{
+		public bool result;
+
 		// Return on success (true) or failure (false).
-		public virtual bool run()
+		public virtual IEnumerator run()
 		{
-			return false;
+			result = false;
+			yield break;
 		}
 	}
 
@@ -17,13 +20,18 @@ public class BehaviorTree
 	{
 		public Task[] children;
 
-		public override bool run()
+		public override IEnumerator run()
 		{
 			foreach (Task c in children)
 			{
-				if (c.run()) return true;
+				yield return c.run();
+				if (c.result) {
+					result = true;
+					yield break;
+				}
 			}
-			return false;
+			result = false;
+			yield break;
 		}
 	}
 	
@@ -31,13 +39,18 @@ public class BehaviorTree
 	{
 		public Task[] children;
 
-		public override bool run()
+		public override IEnumerator run()
 		{
 			foreach (Task c in children)
 			{
-				if (!c.run()) return false;
+				yield return c.run();
+				if (!c.result) {
+					result = false;
+					yield break;
+				}
 			}
-			return true;
+			result = true;
+			yield break;
 		}
 	}
 }

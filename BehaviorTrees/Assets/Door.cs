@@ -60,28 +60,28 @@ public class Door : MonoBehaviour
 		LockIndicator.SetActive(DoorLocked);
 	}
 
-	public bool OpenDoor()
+	public IEnumerator OpenDoor()
 	{
-		if (DoorLocked) return false;
+		if (DoorLocked) yield break;
 		ClosedDoor.SetActive(false);
 		OpenedDoor.SetActive(true);
 		DoorOpen = true;
 		//DoorOpenUi.isOn = true;
 		Debug.Log("Door: OpenDoor");
-		return true;
+		yield break;
 	}
 
-	public bool CloseDoor()
+	public IEnumerator CloseDoor()
 	{
 		OpenedDoor.SetActive(false);
 		ClosedDoor.SetActive(true);
 		DoorOpen = false;
 		//DoorOpenUi.isOn = true;
 		Debug.Log("Door: CloseDoor");
-		return true;
+		yield break;
 	}
 
-	public bool BargeDoor()
+	public IEnumerator BargeDoor()
 	{
 		DoorLocked = false;
 		//DoorLockedUi.isOn = false;
@@ -92,26 +92,26 @@ public class Door : MonoBehaviour
 		DoorOpen = true;
 		//DoorOpenUi.isOn = true;
 		Debug.Log("Door: BargeDoor");
-		return true;
+		yield break;
 	}
 
 
-	public bool UnlockDoor()
+	public IEnumerator UnlockDoor()
 	{
 		LockIndicator.SetActive(false);
 		DoorLocked = false;
 		//DoorLockedUi.isOn = false;
 		Debug.Log("Door: UnlockDoor");
-		return true;
+		yield break;
 	}
 
-	public bool LockDoor()
+	public IEnumerator LockDoor()
 	{
-		if (DoorOpen) return false;
+		if (DoorOpen) yield break;
 		LockIndicator.SetActive(true);
 		DoorLocked = true;
 		//DoorLockedUi.isOn = true;
 		Debug.Log("Door: LockDoor");
-		return true;
+		yield break;
 	}
 }

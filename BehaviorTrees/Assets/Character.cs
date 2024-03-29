@@ -10,6 +10,8 @@ public class Character : MonoBehaviour
 
 	[HideInInspector]
 	public BehaviorTree.Task characterTaskTree;
+	[HideInInspector]
+	public bool running = false;
 
 	private Vector3 startPos;
 	public Transform roomTargetObject;
@@ -96,9 +98,18 @@ public class Character : MonoBehaviour
 
 	public void CharacterRun()
 	{
+		if (!running) {
+			StartCoroutine(CharacterRun_Enumerator());
+		}
+	}
+
+	public IEnumerator CharacterRun_Enumerator()
+	{
 		CharacterReset();
-		bool success = characterTaskTree.run();
+		yield return characterTaskTree.run();
+		bool success = characterTaskTree.result;
 		Debug.Log(success);
+		running = false;
 	}
 
 	public void CharacterReset()
@@ -116,42 +127,63 @@ public class Character : MonoBehaviour
 	class Move : CharacterTask
 	{
 		public Vector3 target;
+		public float speed = 5f;
 
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("Move");
+			Vector3 currentPos = transform.position;
+			float elapsedTime = 0;
+
+			float waitTime = 1/speed * Vector3.Distance(transform.position, target);
+
+			while (elapsedTime < waitTime) {
+				transform.position = Vector3.Lerp(currentPos, target, elapsedTime / waitTime);
+				elapsedTime += Time.deltaTime;
+
+				yield return null;
+			}  
+
+			// Make sure we got there
 			transform.position = target;
-			return true;
+			result = true;
+			Debug.Log("Move (" + target + "): " + result);
+			yield break;
 		}
 	}
 
 	class OpenDoor : CharacterTask
 	{
 		public Door target;
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("OpenDoor");
-			return target.OpenDoor();
+			yield return target.OpenDoor();
+			result = target.DoorOpen;
+			Debug.Log("OpenDoor: " + result);
+			yield break;
 		}
 	}
 
 	class CloseDoor : CharacterTask
 	{
 		public Door target;
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("CloseDoor");
-			return target.CloseDoor();
+			yield return target.CloseDoor();
+			result = !target.DoorOpen;
+			Debug.Log("CloseDoor: " + result);
+			yield break;
 		}
 	}
 
 	class BargeDoor : CharacterTask
 	{
 		public Door target;
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("BargeDoor");
-			return target.BargeDoor();
+			yield return target.BargeDoor();
+			result = target.DoorOpen;
+			Debug.Log("BargeDoor: " + result);
+			yield break;
 		}
 	}
 
@@ -159,20 +191,22 @@ public class Character : MonoBehaviour
 	class DoorOpen_q : CharacterTask
 	{
 		public Door target;
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("DoorOpen_q");
-			return target.DoorOpen;
+			result = target.DoorOpen;
+			Debug.Log("DoorOpen_q: " + result);
+			yield break;
 		}
 	}
 
 	class DoorLocked_q : CharacterTask
 	{
 		public Door target;
-		public override bool run()
+		public override IEnumerator run()
 		{
-			Debug.Log("DoorLocked_q");
-			return !target.DoorLocked;
+			result = !target.DoorLocked;
+			Debug.Log("DoorLocked_q: " + result);
+			yield break;
 		}
 	}
 }
