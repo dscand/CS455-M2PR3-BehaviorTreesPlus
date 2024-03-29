@@ -26,18 +26,18 @@ public class Character : MonoBehaviour
 		startPos = transform.position;
 		roomTarget = roomTargetObject.position;
 
-		KeyObject.SetActive(HasKey);
-
 		characterTaskTree = new BehaviorTree.Selector() {
 			children = new BehaviorTree.Task[] {
 				new BehaviorTree.Sequence() {
 					children = new BehaviorTree.Task[] {
 						new DoorOpen_q() {
 							transform = transform,
+							characterData = this,
 							target = targetDoor,
 						},
 						new Move() {
 							transform = transform,
+							characterData = this,
 							target = roomTarget,
 						}
 					}
@@ -46,46 +46,82 @@ public class Character : MonoBehaviour
 					children = new BehaviorTree.Task[] {
 						new Move() {
 							transform = transform,
+							characterData = this,
 							target = targetDoor.DoorTarget.position,
 						},
 						new BehaviorTree.Selector() {
 							children = new BehaviorTree.Task[] {
 								new BehaviorTree.Sequence() {
 									children = new BehaviorTree.Task[] {
-										new DoorLocked_q() {
+										new DoorNotLocked_q() {
 											transform = transform,
+											characterData = this,
 											target = targetDoor,
 										},
 										new OpenDoor() {
 											transform = transform,
+											characterData = this,
+											target = targetDoor,
+										}
+									}
+								},
+								new BehaviorTree.Sequence() {
+									children = new BehaviorTree.Task[] {
+										/*new FindKey() {
+											transform = transform,
+											characterData = this,
+											target = targetDoor,
+										},*/
+										new HasKey_q() {
+											transform = transform,
+											characterData = this,
+										},
+										new UnlockDoor() {
+											transform = transform,
+											characterData = this,
+											target = targetDoor,
+										},
+										new OpenDoor() {
+											transform = transform,
+											characterData = this,
 											target = targetDoor,
 										},
 										new Move() {
 											transform = transform,
-											target = roomTarget,
-										}
+											characterData = this,
+											target = targetDoor.DoorTarget2.position,
+										},
+										new CloseDoor() {
+											transform = transform,
+											characterData = this,
+											target = targetDoor,
+										},
+										new LockDoor() {
+											transform = transform,
+											characterData = this,
+											target = targetDoor,
+										},
 									}
 								},
 								new BehaviorTree.Sequence() {
 									children = new BehaviorTree.Task[] {
 										/*new DoorOpen_q() {
 											transform = transform,
+											characterData = this,
 											target = targetDoor,
 										},*/
 										new BargeDoor() {
 											transform = transform,
+											characterData = this,
 											target = targetDoor,
 										},
-										new Move() {
-											transform = transform,
-											target = roomTarget,
-										}
 									}
 								}
 							}
 						},
 						new Move() {
 							transform = transform,
+							characterData = this,
 							target = roomTarget,
 						}
 					}
@@ -98,14 +134,17 @@ public class Character : MonoBehaviour
 
 	public void CharacterRun()
 	{
-		if (!running) {
-			StartCoroutine(CharacterRun_Enumerator());
+		if (running) {
+			StopAllCoroutines();
+			CharacterReset();
 		}
+
+		running = true;
+		StartCoroutine(CharacterRun_Enumerator());
 	}
 
 	public IEnumerator CharacterRun_Enumerator()
 	{
-		CharacterReset();
 		yield return characterTaskTree.run();
 		bool success = characterTaskTree.result;
 		Debug.Log(success);
@@ -115,13 +154,15 @@ public class Character : MonoBehaviour
 	public void CharacterReset()
 	{
 		transform.position = startPos;
-		targetDoor.Reset();
+		KeyObject.SetActive(HasKey);
+		//targetDoor.Reset();
 	}
 
 
 	class CharacterTask : BehaviorTree.Task
 	{
 		public Transform transform;
+		public Character characterData;
 	}
 
 	class Move : CharacterTask
@@ -188,6 +229,41 @@ public class Character : MonoBehaviour
 	}
 
 
+	class UnlockDoor : CharacterTask
+	{
+		public Door target;
+		public override IEnumerator run()
+		{
+			if (!characterData.HasKey) {
+				result = false;
+				yield break;
+			}
+
+			yield return target.UnlockDoor();
+			result = !target.DoorLocked;
+			Debug.Log("UnlockDoor: " + result);
+			yield break;
+		}
+	}
+
+	class LockDoor : CharacterTask
+	{
+		public Door target;
+		public override IEnumerator run()
+		{
+			if (!characterData.HasKey) {
+				result = false;
+				yield break;
+			}
+
+			yield return target.LockDoor();
+			result = target.DoorLocked;
+			Debug.Log("LockDoor: " + result);
+			yield break;
+		}
+	}
+
+
 	class DoorOpen_q : CharacterTask
 	{
 		public Door target;
@@ -199,13 +275,23 @@ public class Character : MonoBehaviour
 		}
 	}
 
-	class DoorLocked_q : CharacterTask
+	class DoorNotLocked_q : CharacterTask
 	{
 		public Door target;
 		public override IEnumerator run()
 		{
 			result = !target.DoorLocked;
-			Debug.Log("DoorLocked_q: " + result);
+			Debug.Log("DoorNotLocked_q: " + result);
+			yield break;
+		}
+	}
+
+	class HasKey_q : CharacterTask
+	{
+		public override IEnumerator run()
+		{
+			result = characterData.HasKey;
+			Debug.Log("HasKey_q: " + result);
 			yield break;
 		}
 	}

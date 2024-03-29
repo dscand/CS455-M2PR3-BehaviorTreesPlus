@@ -9,6 +9,7 @@ public class Door : MonoBehaviour
 	public bool DoorLocked = false;
 	public bool DoorBroken = false;
 	public Transform DoorTarget;
+	public Transform DoorTarget2;
 
 	[SerializeField]
 	private GameObject OpenedDoor;
@@ -19,37 +20,29 @@ public class Door : MonoBehaviour
 	[SerializeField]
 	private GameObject LockIndicator;
 
-	public Toggle DoorOpenUi;
-	public Toggle DoorLockedUi;
-
 
 	void Start()
 	{
-		//DoorOpenUi.onValueChanged.AddListener(delegate {
-		//	DoorOpen = DoorOpenUi.isOn;
-		//	Reset();
-		//});
-		//DoorLockedUi.onValueChanged.AddListener(delegate {
-		//	DoorLocked = DoorLockedUi.isOn;
-		//	Reset();
-		//});
-		Reset();
+		/*DoorOpenUi.onValueChanged.AddListener(delegate {
+			DoorOpen = DoorOpenUi.isOn;
+			Reset();
+		});
+		DoorLockedUi.onValueChanged.AddListener(delegate {
+			DoorLocked = DoorLockedUi.isOn;
+			Reset();
+		});*/
+		
+		//Reset();
 	}
 
 	public void Reset()
 	{
-		DoorOpen = DoorOpenUi.isOn;
-		DoorLocked = DoorLockedUi.isOn;
-
 		if (DoorBroken) {
 			DoorOpen = true;
-			DoorOpenUi.isOn = true;
 			DoorLocked = false;
-			DoorLockedUi.isOn = false;
 		}
 		if (DoorLocked) {
 			DoorOpen = false;
-			DoorOpenUi.isOn = false;
 		}
 
 		BrokenDoor.SetActive(DoorBroken);

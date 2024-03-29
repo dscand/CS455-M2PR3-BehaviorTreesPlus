@@ -6,7 +6,7 @@ public class BehaviorTree
 {
 	public class Task
 	{
-		public bool result;
+		public bool result = false;
 
 		// Return on success (true) or failure (false).
 		public virtual IEnumerator run()
